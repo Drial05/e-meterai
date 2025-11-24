@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
   // tambahkan callback url di server
   const callbackUrl =
-    (process.env.CALLBACK_NGROK || "").replace(/\/$/, "") +
+    (process.env.CALLBACK_URL || "").replace(/\/$/, "") +
     "/api/emeterai/callback";
   const bodyWithCallback = { ...body, callback_url: callbackUrl };
 
