@@ -97,7 +97,7 @@ export function AppSidebar(props: AppSidebarProps) {
         <NavDashboard items={data.navDashboard} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser />
+        <NavUser user={data.user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
