@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,8 @@ export default function SignMateraiPage() {
   const [result, setResult] = useState<any>(null);
   const [polling, setPolling] = useState(false);
 
+  const intervalRef = useRef<number | null>(null);
+
   const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -34,31 +36,46 @@ export default function SignMateraiPage() {
   useEffect(() => {
     if (!polling) return;
 
-    const timer = setInterval(async () => {
-      const res = await fetch("/api/emeterai/callback");
-      const json = await res.json();
+    // cegah double polling
+    if (intervalRef.current) return;
 
-      if (json?.callback?.status === "completed") {
-        clearInterval(timer);
-        setPolling(false);
+    intervalRef.current = window.setInterval(async () => {
+      try {
+        const res = await fetch("/api/emeterai/callback");
 
-        console.log("Meterai selesai:", json);
+        if (!res.ok) {
+          console.warn("Callback masih belum siap...");
+          return;
+        }
 
-        // download dokumen
-        const id = json.callback.documentId;
-        const fname = json.callback.filename;
+        const json = await res.json();
+        const status = json?.callback?.status;
 
-        // 🔥 THIS IS THE FIX
+        console.log("Response callback:", json);
+        console.log("Status callback:", status);
+
         window.open(
-          `/api/emeterai/download?id=${id}&filename=${fname}`,
+          `/api/emeterai/download?id=${documentId}&filename=${filename}`,
           "_blank"
         );
 
-        setLoading(false);
+        console.log("✔ Meterai selesai, file siap di-download.");
+
+        setPolling(false);
+
+        clearInterval(intervalRef.current!);
+        intervalRef.current = null;
+      } catch (err) {
+        console.error("Polling error:", err);
       }
     }, 2000);
 
-    return () => clearInterval(timer);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [polling]);
 
   const callApiSign = async (e: React.FormEvent) => {
