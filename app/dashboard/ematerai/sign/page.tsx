@@ -21,6 +21,7 @@ export default function SignMateraiPage() {
   const [filename, setFilename] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
   const [polling, setPolling] = useState(false);
+  const alreadyNotified = useRef(false);
 
   const intervalRef = useRef<number | null>(null);
 
@@ -71,24 +72,28 @@ export default function SignMateraiPage() {
             "_blank"
           );
 
-          setPolling(false);
-
+          // Stop polling
           clearInterval(intervalRef.current!);
           intervalRef.current = null;
+          setPolling(false);
         } else if (stamping === "in_progress") {
-          toast.info("⏳ Proses penempelan materai masih berlangsung...", {
-            duration: 3000,
-          });
-          setPolling(false);
-          clearInterval(intervalRef.current!);
-          intervalRef.current = null;
+          if (!alreadyNotified.current) {
+            toast.info("⏳ Proses penempelan materai masih berlangsung...", {
+              duration: 3000,
+            });
+            alreadyNotified.current = true;
+          }
         } else {
-          toast.error("⚠ Gagal menempel materai pada dokumen.", {
-            duration: 5000,
-          });
-          setPolling(false);
+          toast.error(
+            "⚠ Gagal menempel materai pada dokumen, Silakan coba ulang.",
+            {
+              duration: 5000,
+            }
+          );
+          // Stop polling
           clearInterval(intervalRef.current!);
           intervalRef.current = null;
+          setPolling(false);
         }
       } catch (err) {
         console.error("Polling error:", err);
