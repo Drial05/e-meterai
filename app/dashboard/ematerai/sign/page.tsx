@@ -12,6 +12,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SignMateraiPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -34,9 +35,7 @@ export default function SignMateraiPage() {
 
   // 🔥 polling callback setiap 2 detik
   useEffect(() => {
-    if (!polling) return;
-
-    // cegah double polling
+    if (!polling || !documentId) return;
     if (intervalRef.current) return;
 
     intervalRef.current = window.setInterval(async () => {
@@ -51,20 +50,46 @@ export default function SignMateraiPage() {
         const json = await res.json();
         const status = json?.callback?.status;
 
-        console.log("Response callback:", json);
-        console.log("Status callback:", status);
+        // console.log("Response callback:", json);
+        // console.log("Status callback:", status);
 
-        window.open(
-          `/api/emeterai/download?id=${documentId}&filename=${filename}`,
-          "_blank"
+        const resDocument = await fetch(
+          `/api/emeterai/cekDocuments?id=${documentId}`
         );
+        const jsonDocument = await resDocument.json();
 
-        console.log("✔ Meterai selesai, file siap di-download.");
+        // console.log("Cek Document Response:", jsonDocument);
 
-        setPolling(false);
+        const stamping = jsonDocument?.data.data.attributes.stamping_status;
 
-        clearInterval(intervalRef.current!);
-        intervalRef.current = null;
+        // jika stamping sukses maka download file
+        if (stamping === "success") {
+          console.log("✔ Dokumen sudah success ditempel.");
+
+          window.open(
+            `/api/emeterai/download?id=${documentId}&filename=${filename}`,
+            "_blank"
+          );
+
+          setPolling(false);
+
+          clearInterval(intervalRef.current!);
+          intervalRef.current = null;
+        } else if (stamping === "in_progress") {
+          toast.info("⏳ Proses penempelan materai masih berlangsung...", {
+            duration: 3000,
+          });
+          setPolling(false);
+          clearInterval(intervalRef.current!);
+          intervalRef.current = null;
+        } else {
+          toast.error("⚠ Gagal menempel materai pada dokumen.", {
+            duration: 5000,
+          });
+          setPolling(false);
+          clearInterval(intervalRef.current!);
+          intervalRef.current = null;
+        }
       } catch (err) {
         console.error("Polling error:", err);
       }
@@ -123,9 +148,7 @@ export default function SignMateraiPage() {
 
       setDocumentId(id);
       setFilename(fname);
-
-      console.log("DocID:", id);
-
+      // console.log("DocID:", id);
       // mulai polling
       setPolling(true);
     } catch (error) {
