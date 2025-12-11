@@ -1,0 +1,60 @@
+/* === TEXT LAYER (React-PDF v10 / PDF.js v4) === */
+.pdf-text-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: 0 0;
+  line-height: 1;
+  user-select: text;
+}
+
+.pdf-text-layer span {
+  position: absolute;
+  white-space: pre;
+  transform-origin: 0 0;
+  pointer-events: auto; /* allow selection */
+}
+
+/* selection highlight */
+.pdf-text-layer ::selection {
+  background: rgba(0, 128, 255, 0.25);
+}
+
+/* === ANNOTATION LAYER (React-PDF v10 / PDF.js v4) === */
+.pdf-annotation-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pdf-annotation-layer .annotation {
+  pointer-events: auto;
+}
+
+/* links */
+.pdf-annotation-layer a {
+  color: rgba(0, 0, 255, 0.6);
+  text-decoration: underline;
+}
+
+/* form fields */
+.pdf-annotation-layer input,
+.pdf-annotation-layer textarea,
+.pdf-annotation-layer select {
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+/* focus */
+.pdf-annotation-layer a:focus,
+.pdf-annotation-layer input:focus,
+.pdf-annotation-layer textarea:focus,
+.pdf-annotation-layer select:focus {
+  outline: 2px solid rgba(0, 128, 255, 0.6);
+}
+
+/* base page container */
+.react-pdf__Page {
+  position: relative;
+}

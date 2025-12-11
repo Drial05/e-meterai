@@ -1,0 +1,52 @@
+/* === PAGE WRAPPER === */
+.react-pdf__Page {
+  position: relative;
+}
+
+/* === TEXT LAYER (PDF.js v4) === */
+.react-pdf__Page__textLayer,
+.react-pdf__Page__textContent {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: 0 0;
+}
+
+.react-pdf__Page__textLayer span,
+.react-pdf__Page__textContent span {
+  position: absolute;
+  white-space: pre;
+  transform-origin: 0 0;
+  pointer-events: auto;
+}
+
+.react-pdf__Page__textLayer ::selection,
+.react-pdf__Page__textContent ::selection {
+  background: rgba(0, 128, 255, 0.25);
+}
+
+/* === ANNOTATION LAYER (PDF.js v4) === */
+.react-pdf__Page__annotations {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.react-pdf__Page__annotations .annotation {
+  pointer-events: auto;
+}
+
+/* links */
+.react-pdf__Page__annotations a {
+  color: rgba(0, 0, 255, 0.6);
+  text-decoration: underline;
+}
+
+/* form fields */
+.react-pdf__Page__annotations input,
+.react-pdf__Page__annotations textarea,
+.react-pdf__Page__annotations select {
+  pointer-events: auto;
+  box-sizing: border-box;
+}

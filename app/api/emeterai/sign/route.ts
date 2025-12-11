@@ -16,9 +16,13 @@ export async function POST(req: Request) {
   const callbackUrl =
     (process.env.CALLBACK_URL || "").replace(/\/$/, "") +
     "/api/emeterai/callback";
-  const bodyWithCallback = { ...body, callback_url: callbackUrl };
+  const bodyWithCallback = {
+    ...body,
+    callback_url: body.callback_url || callbackUrl,
+  };
 
   const date = new Date().toUTCString();
+
   const signingString = `date: ${date}\n${method} ${path} HTTP/1.1`;
   const signature = crypto
     .createHmac("sha256", clientSecret)
@@ -41,7 +45,7 @@ export async function POST(req: Request) {
       headers: {
         Authorization: authHeader,
         Date: date,
-        Digest: digestHeader,
+        // Digest: digestHeader,
         "Content-Type": "application/json",
       },
       data: bodyWithCallback,
@@ -55,6 +59,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Mekari API Error:", error.response?.data || error.message);
     // kirim error ke frontend
+    // console.log("payload sent to Mekari API:", bodyWithCallback);
     return NextResponse.json(
       {
         success: false,

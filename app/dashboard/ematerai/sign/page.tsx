@@ -13,6 +13,29 @@ import {
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { PDFDocument } from "pdf-lib";
+import dynamic from "next/dynamic";
+
+// Matikan SSR untuk komponen PDF editor
+const MeteraiEditor = dynamic(() => import("@/components/meteraiEditor"), {
+  ssr: false,
+});
+
+interface SubmitPayload {
+  base64: string;
+  filename: string;
+  page: number;
+  pdf: {
+    width: number;
+    height: number;
+  };
+  position: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
 
 export default function SignMateraiPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -24,15 +47,6 @@ export default function SignMateraiPage() {
   const alreadyNotified = useRef(false);
 
   const intervalRef = useRef<number | null>(null);
-
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
 
   // 🔥 polling callback setiap 2 detik
   useEffect(() => {
@@ -108,37 +122,29 @@ export default function SignMateraiPage() {
     };
   }, [polling]);
 
-  const callApiSign = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const callApiSign = async (data: SubmitPayload) => {
     setLoading(true);
-    setResult(null);
 
-    if (!file) {
-      alert("File wajib diisi!");
-      return;
-    }
+    const { base64, filename, page, pdf, position } = data;
 
     try {
-      const base64String = await convertToBase64(file);
-      const cleanBase64 = base64String.split(",")[1];
-
       const res = await fetch("/api/emeterai/sign", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          doc: cleanBase64,
-          filename: file.name,
+          doc: base64,
+          filename,
           annotations: [
             {
-              page: 1,
-              position_x: 100,
-              position_y: 100,
-              element_width: 80,
-              element_height: 80,
-              canvas_width: 595,
-              canvas_height: 841,
+              page,
+              position_x: position.x,
+              position_y: position.y,
+              element_width: position.width,
+              element_height: position.height,
+              canvas_width: pdf.width,
+              canvas_height: pdf.height,
               type_of: "meterai",
             },
           ],
@@ -160,56 +166,28 @@ export default function SignMateraiPage() {
       console.error("Error uploading document:", error);
       alert("Terjadi kesalahan saat mengunggah dokumen.");
     } finally {
-      setFile(null);
-      (e.target as HTMLFormElement).reset(); // reset form agar input file kosong
       setLoading(false);
     }
   };
 
   return (
     <div className="flex items-center justify-center px-4">
-      <Card className="w-full max-w-full px-4">
+      <Card className="w-full max-w-full px-2">
         <CardHeader>
           <CardTitle className="text-center text-2xl font-semibold">
-            Upload Dokumen yang akan di meterai
+            Tempel Meterai pada Dokumen
           </CardTitle>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={callApiSign} className="space-y-4">
-            <div>
-              <Label htmlFor="file" className="py-4">
-                Upload Dokumen
-              </Label>
-              <Input
-                id="file"
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Format: PDF, DOC, DOCX — Maks 10MB
-              </p>
-            </div>
+          <MeteraiEditor onSubmit={callApiSign} />
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                  Mengunggah...
-                </>
-              ) : (
-                "Kirim untuk di Meterai"
-              )}
+          {loading && (
+            <Button disabled className="mt-4 w-full">
+              <Loader2 className="animate-spin mr-2" /> Mengirim...
             </Button>
-          </form>
+          )}
         </CardContent>
-
-        {/* {result && (
-          <pre className="mt-4 p-2 bg-gray-100 rounded text-sm">
-            {JSON.stringify(result, null, 2)}
-          </pre>
-        )} */}
 
         <CardFooter className="text-center text-sm text-muted-foreground">
           Pastikan dokumen sudah benar sebelum dikirim untuk di meterai.
