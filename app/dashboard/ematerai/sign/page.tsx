@@ -171,8 +171,8 @@ export default function SignMateraiPage() {
   };
 
   return (
-    <div className="flex items-center justify-center px-4">
-      <Card className="w-full max-w-full px-2">
+    <div className="flex items-center justify-center px-2 mt-4 sm:mt-8">
+      <Card className="w-full max-w-[820px] mx-auto px-2">
         <CardHeader>
           <CardTitle className="text-center text-2xl font-semibold">
             Tempel Meterai pada Dokumen

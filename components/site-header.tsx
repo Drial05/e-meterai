@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeSelector } from "./theme-selector";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export function SiteHeader({ title = "Dashboard" }: { title?: string }) {
   const { setTheme } = useTheme();
@@ -19,7 +20,16 @@ export function SiteHeader({ title = "Dashboard" }: { title?: string }) {
     Criteria: "Kriteria",
   };
 
+  const isMobile = useMediaQuery("(max-width: 640px)");
+
   const finalTitle = labelMap[title] || title;
+
+  // truncate dari belakang khusus mobile
+  const maxLength = 12;
+  const displayTitle =
+    isMobile && finalTitle.length > maxLength
+      ? "..." + finalTitle.slice(-maxLength)
+      : finalTitle;
 
   return (
     <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
@@ -29,7 +39,9 @@ export function SiteHeader({ title = "Dashboard" }: { title?: string }) {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
-        <h1 className="text-base font-medium">{finalTitle}</h1>
+        <h1 className="text-base sm:text-base font-medium truncate max-w-[120px] sm:max-w-none">
+          {displayTitle}
+        </h1>
       </div>
       <ThemeSelector />
       <div className="px-4">
